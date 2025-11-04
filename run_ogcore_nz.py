@@ -39,10 +39,10 @@ def main():
     p2 = obtain_reform_params(p, save_dir)
     runner(p2, time_path=True, client=None)
 
-    postp(save_dir)
+    postp(save_dir, p.start_year)
 
 
-def postp(save_dir):
+def postp(save_dir, start_year):
     base_dir = os.path.join(save_dir, BASELINE_DIR)
     reform_dir = os.path.join(save_dir, REFORM_DIR)
     # return ans - the percentage changes in macro aggregates and prices
@@ -57,13 +57,13 @@ def postp(save_dir):
     )
     ans = ot.macro_table(
         base_tpi,
-        base_params,
+        base_params, 
         reform_tpi=reform_tpi,
         reform_params=reform_params,
         var_list=["Y", "C", "K", "L", "r", "w"],
         output_type="pct_diff",
         num_years=10,
-        start_year=p.start_year,
+        start_year=start_year,
     )
 
     # create plots of output
@@ -102,7 +102,8 @@ def obtain_reform_params(p_base, save_dir):
     reform_dir = os.path.join(save_dir, REFORM_DIR)
     p_reform.output_base = reform_dir
     p_reform.baseline = False
-    p_reform.alpha_I = 0.5 * p_reform.alpha_I
+    # p_reform.alpha_I = 0.5 * p_base.alpha_I
+    p_reform.debt_ratio_ss = 1.5 * p_base.debt_ratio_ss
 
     return p_reform
 
