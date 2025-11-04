@@ -20,6 +20,7 @@ class Specifications(paramtools.Parameters):
     """
 
     defaults = os.path.join(CURRENT_PATH, "default_parameters.json")
+    # defaults = os.path.join(CURRENT_PATH, "test_parameters.json")
     array_first = True
 
     def __init__(

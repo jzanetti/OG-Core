@@ -53,3 +53,5 @@ regression/OUTPUT_REFORM*
 .vscode/
 *default.profraw
 *un_api_token.txt
+results
+cge

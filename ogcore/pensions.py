@@ -38,7 +38,9 @@ def replacement_rate_vals(nssmat, wss, factor_ss, j, p):
         dim2 = e.shape[1]
     else:
         dim2 = 1
+
     earnings = (e * (wss * nssmat * factor_ss)).reshape(p.S, dim2)
+
     # get highest earning years for number of years AIME computed from
     highest_earn = (
         -1.0 * np.sort(-1.0 * earnings[: p.retire[-1], :], axis=0)
@@ -105,6 +107,9 @@ def pension_amount(r, w, n, Y, theta, t, j, shift, method, e, factor, p):
             "'US-Style Social Security', 'Defined Benefits', "
             "'Notional Defined Contribution', 'Points System'"
         )
+    # Sijin
+    # pension = 0.1 * np.ones(pension.shape)
+
     return pension
 
 
@@ -217,6 +222,10 @@ def DB_amount(w, e, n, j, p):
     # TODO: could add this to parameters.py at some point
     equiv_periods = int(round((p.S / 80.0) * p.avg_earn_num_years)) - 1
     equiv_yr_contrib = int(round((p.S / 80.0) * p.yr_contrib)) - 1
+    #equiv_periods = int(round((p.S / 8.0) * p.avg_earn_num_years)) - 1
+    #equiv_yr_contrib = int(round((p.S / 8.0) * p.yr_contrib)) - 1
+
+
     L_inc_avg_s = np.zeros(equiv_periods)
 
     if n.shape[0] < p.S:
