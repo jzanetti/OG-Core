@@ -10,6 +10,7 @@ from ogcore import config
 import os
 import warnings
 import logging
+from pandas import DataFrame as pd_Dataframe
 
 if not SHOW_RUNTIME:
     warnings.simplefilter("ignore", RuntimeWarning)
@@ -17,7 +18,7 @@ if not SHOW_RUNTIME:
 """
 Set minimizer tolerance
 """
-MINIMIZER_TOL = 1e-13
+MINIMIZER_TOL = 1e-15
 
 """
 Set flag for enforcement of solution check
@@ -647,6 +648,7 @@ def SS_solver(
     p,
     client,
     fsolve_flag=False,
+    run_eval = False
 ):
     """
     Solves for the steady state distribution of capital, labor, as well
@@ -1076,12 +1078,55 @@ def SS_solver(
     logging.info(f"Foreign capital holdings = {K_f_ss}")
     logging.info(f"resource constraint: {RC}")
 
+    if run_eval:
+        # added by sijin starts ---------
+        logging.info(f"Yss = {Yss}")
+        logging.info(f"total_tax_revenue = {total_tax_revenue}")
+        logging.info(f"TR_ss = {TR_ss}")
+        logging.info(f"UBI_outlays = {UBI_outlays}")
+        logging.info(f"agg_pension_outlays = {agg_pension_outlays}")
+        logging.info(f"I_g_ss = {I_g_ss}")
+        logging.info(f"debt_service = {debt_service}")
+        logging.info(f"new_borrowing = {new_borrowing}")
+        logging.info(f"Gss = {Gss}")
+        logging.info(f"RC = {RC}")
+        row = {
+            "dist": dist,
+            "Yss": Yss,
+            "total_tax_revenue": total_tax_revenue,
+            "TR_ss": TR_ss,
+            "UBI_outlays": UBI_outlays,
+            "agg_pension_outlays": agg_pension_outlays,
+            "I_g_ss": I_g_ss,
+            "debt_service": debt_service,
+            "new_borrowing": new_borrowing,
+            "Gss": Gss,
+            "RC": RC  # will store as string if list
+        }
+
+        df_row = pd_Dataframe([row])
+
+        csv_path = f"{p.baseline_dir}/results_eval.csv"
+        if not os.path.exists(csv_path):
+            df_row.to_csv(csv_path, index=False)
+        else:
+            df_row.to_csv(csv_path, mode='a', header=False, index=False)
+
+        #if max(np.absolute(RC)) > p.RC_SS or dist > p.mindist_SS:
+        #    err = f"Evaludation not satisfied (dist: {dist}; RC: {max(np.absolute(RC))})"
+        #    raise RuntimeError(err)
+        
+        return df_row
+
+    # added by sijin end ---------
+
     if Gss < 0:
         logging.warning(
             "Steady state government spending is negative to satisfy"
-            + " budget"
+            + " budget" + f"({Gss})"
         )
 
+    # ENFORCE_SOLUTION_CHECKS = False
     if ENFORCE_SOLUTION_CHECKS and (max(np.absolute(RC)) > p.RC_SS):
         logging.warning(f"Resource Constraint Difference: {RC}")
         err = f"Steady state aggregate resource constraint not satisfied (target: {p.RC_SS})"
@@ -1305,7 +1350,7 @@ def SS_fsolve(guesses, *args):
     return errors
 
 
-def run_SS(p, client=None):
+def run_SS(p, client=None, run_eval = False):
     """
     Solve for steady-state equilibrium of OG-Core.
 
@@ -1450,7 +1495,13 @@ def run_SS(p, client=None):
             p,
             client,
             fsolve_flag,
+            run_eval = run_eval
         )
+
+        if run_eval:
+            logging.info("This is a eval run ...")
+            return output
+
     else:
         # Use the baseline solution to get starting values for the reform
         baseline_ss_path = os.path.join(p.baseline_dir, "SS", "SS_vars.pkl")
@@ -1613,6 +1664,7 @@ def run_SS(p, client=None):
         # Return SS values of variables
         if not p.baseline_spending:
             Ig_baseline = None
+
         output = SS_solver(
             b_guess,
             n_guess,
@@ -1628,7 +1680,9 @@ def run_SS(p, client=None):
             p,
             client,
             fsolve_flag,
+            run_eval = run_eval
         )
+
         if output["G"] < 0.0:
             warnings.warn(
                 "Warning: The combination of the tax policy "

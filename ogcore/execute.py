@@ -9,7 +9,7 @@ import time
 from ogcore import SS, TPI, utils
 
 
-def runner(p, time_path=True, client=None):
+def runner(p, time_path=True, client=None, run_eval=False):
     """
     This function runs the OG-Core model, solving for the steady-state
     and (optionally) the time path equilibrium.
@@ -43,7 +43,10 @@ def runner(p, time_path=True, client=None):
         Run SS
     ------------------------------------------------------------------------
     """
-    ss_outputs = SS.run_SS(p, client=client)
+    ss_outputs = SS.run_SS(p, client=client, run_eval=run_eval)
+
+    if run_eval:
+        return ss_outputs
 
     """
     ------------------------------------------------------------------------
